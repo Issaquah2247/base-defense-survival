@@ -1,0 +1,13 @@
+{
+  "name": "base-defense-survival",
+  "version": "1.0.0",
+  "description": "3D survival base defense game with upgrades and waves - Built with Three.js",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": ["game", "threejs", "survival", "defense", "base-building"],
+  "author": "Issaquah2247",
+  "license": "MIT"
+}
