@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base Defense Survival - Build & Expand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        .resource {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 200px;
+        }
+        .resource-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+        #buildMenu {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            pointer-events: all;
+        }
+        .build-btn {
+            background: linear-gradient(145deg, #4a5568, #2d3748);
+            border: 2px solid #805ad5;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .build-btn:hover {
+            background: linear-gradient(145deg, #5a6578, #3d4758);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(128,90,213,0.4);
+        }
+        .build-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #waveInfo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-align: right;
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        .wave-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .wave-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #f56565, #ed8936);
+            transition: width 0.3s;
+        }
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        #upgradePanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 30, 0.95);
+            border: 3px solid #805ad5;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            pointer-events: all;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        #upgradePanel h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .upgrade-option {
+            background: rgba(40, 40, 50, 0.8);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            color: white;
+        }
+        .upgrade-btn {
+            background: linear-gradient(145deg, #805ad5, #6b46c1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .close-btn {
+            background: #e53e3e;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div id="hud">
+            <div class="resource">
+                <div class="resource-icon" style="background: linear-gradient(145deg, #ffd700, #ffed4e);"></div>
+                <div>Gold: <span id="goldAmount">500</span></div>
+            </div>
+            <div class="resource">
+                <div class="resource-icon" style="background: linear-gradient(145deg, #8b4513, #cd853f);"></div>
+                <div>Wood: <span id="woodAmount">300</span></div>
+            </div>
+            <div class="resource">
+                <div class="resource-icon" style="background: linear-gradient(145deg, #808080, #c0c0c0);"></div>
+                <div>Stone: <span id="stoneAmount">200</span></div>
+            </div>
+        </div>
+        <div id="waveInfo">
+            <div>Wave: <span id="waveNumber">1</span></div>
+            <div>Enemies: <span id="enemyCount">0</span></div>
+            <div class="wave-bar">
+                <div class="wave-progress" id="waveProgress" style="width: 0%"></div>
+            </div>
+            <div style="margin-top: 10px; font-size: 14px;">Next wave in: <span id="waveTimer">30</span>s</div>
+        </div>
+        <div id="buildMenu">
+            <button class="build-btn" onclick="game.placeBuilding('wall')">
+                🧱 Wall<br><small>(50🪙 30🪵)</small>
+            </button>
+            <button class="build-btn" onclick="game.placeBuilding('turret')">
+                🔫 Turret<br><small>(100🪙 50🪵 30🪨)</small>
+            </button>
+            <button class="build-btn" onclick="game.placeBuilding('mine')">
+                ⛏️ Gold Mine<br><small>(150🪙 100🪵)</small>
+            </button>
+            <button class="build-btn" onclick="game.placeBuilding('barracks')">
+                🏰 Barracks<br><small>(200🪙 150🪵 100🪨)</small>
+            </button>
+        </div>
+        <div id="message"></div>
+        <div id="upgradePanel">
+            <h2>Upgrade Building</h2>
+            <div id="upgradeContent"></div>
+            <button class="close-btn" onclick="game.closeUpgradePanel()">Close</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
